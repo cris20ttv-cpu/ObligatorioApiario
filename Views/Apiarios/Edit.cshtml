@@ -1,0 +1,180 @@
+@model ObligatorioApiario.Models.Apiario
+
+@{
+    ViewData["Title"] = "Editar Apiario";
+}
+
+<div style="max-width: 1000px; margin: 0 auto;">
+    <div class="breadcrumb">
+        <span class="breadcrumb-item text-muted">Apiarios</span>
+        <i class="fa-solid fa-chevron-right breadcrumb-separator"></i>
+        <span class="breadcrumb-item text-muted">@Model.Nombre</span>
+        <i class="fa-solid fa-chevron-right breadcrumb-separator"></i>
+        <span class="breadcrumb-item breadcrumb-active">Editar</span>
+    </div>
+
+    <h1 class="page-title">Editar Apiario</h1>
+    <p class="page-description">Actualiza la información del apiario o corrige su ubicación en el mapa interactivo.</p>
+
+    <form asp-action="Edit" method="post" class="apiario-form">
+        <input type="hidden" asp-for="ID_Apiario" />
+        <input type="hidden" asp-for="Cant_Colmenas" />
+
+        <div class="cards-layout">
+            
+            <!-- Tarjeta 1: Información General -->
+            <div class="card general-info-card">
+                <div class="card-header">
+                    <i class="fa-solid fa-circle-info"></i> Información General
+                </div>
+                <div class="card-body">
+                    
+                    <div class="form-row">
+                        <div class="form-group col-half">
+                            <label class="form-label">ID DEL APIARIO</label>
+                            <input class="form-input" value="API-@Model.ID_Apiario.ToString("D5")" disabled style="background-color: #f8f6f4; color: #7a6e62;" />
+                        </div>
+                        <div class="form-group col-half">
+                            <label class="form-label">COLMENAS (ACTUALES)</label>
+                            <input class="form-input" value="@ViewBag.ColmenasActuales" disabled style="background-color: #f8f6f4; color: #7a6e62;" />
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Nombre" class="form-label">NOMBRE DEL APIARIO <i class="fa-solid fa-circle-exclamation required-icon" title="Campo obligatorio"></i></label>
+                        <input asp-for="Nombre" class="form-input" placeholder="Ej: Las Camelias Norte" />
+                        <span asp-validation-for="Nombre" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Notas" class="form-label">NOTAS Y DESCRIPCIÓN</label>
+                        <textarea asp-for="Notas" class="form-input form-textarea" placeholder="Detalles sobre el acceso, flora predominante o historial del terreno..."></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-half">
+                            <label asp-for="Zona" class="form-label">ZONA <i class="fa-solid fa-circle-exclamation required-icon" title="Campo obligatorio"></i></label>
+                            <input asp-for="Zona" class="form-input" placeholder="Ej: Zona Norte" required />
+                            <span asp-validation-for="Zona" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group col-half">
+                            <label asp-for="Ubicacion" class="form-label">DIRECCIÓN <i class="fa-solid fa-circle-exclamation required-icon" title="Campo obligatorio"></i></label>
+                            <input asp-for="Ubicacion" class="form-input" placeholder="Camino Rural s/n" required />
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Tarjeta 2: Datos Técnicos -->
+            <div class="card technical-data-card">
+                <div class="card-header">
+                    <i class="fa-solid fa-satellite-dish"></i> Datos Técnicos
+                </div>
+                <div class="card-body">
+
+                    <div class="form-group">
+                        <label asp-for="Latitud" class="form-label">LATITUD <i class="fa-solid fa-circle-exclamation required-icon" title="Campo obligatorio"></i></label>
+                        <input asp-for="Latitud" class="form-input" placeholder="ej: -33.4489" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Longitud" class="form-label">LONGITUD <i class="fa-solid fa-circle-exclamation required-icon" title="Campo obligatorio"></i></label>
+                        <input asp-for="Longitud" class="form-input" placeholder="ej: -70.64827" required />
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Tarjeta 3: Ubicación Exacta (Full Width) -->
+        <div class="card map-card mt-3">
+            <div class="card-header map-header d-flex justify-content-between">
+                <div><i class="fa-regular fa-map"></i> Ubicación Exacta</div>
+                <span class="text-muted text-small">Haz clic en el mapa para marcar la posición</span>
+            </div>
+            <div class="map-container" style="position: relative;">
+                <div id="interactive-map" style="width: 100%; height: 350px; border-radius: 0 0 16px 16px; z-index: 1;"></div>
+                
+                <div class="map-coordinates-box" style="position: absolute; bottom: 15px; left: 15px; z-index: 1000; background: white; padding: 8px 15px; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); font-size: 0.85rem;">
+                    <strong>Coordenadas fijadas:</strong> <span id="coord-display">Cargando...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions mt-4">
+            <a asp-action="Index" class="btn-outline">Cancelar</a>
+            <button type="submit" class="btn-primary">
+                <i class="fa-regular fa-circle-check"></i> Guardar Cambios
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Incluir CSS de Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <!-- Incluir JS de Leaflet -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Coordenadas centrales por defecto
+            var defaultLat = -32.5228;
+            var defaultLng = -55.7658;
+            var initialZoom = 13;
+
+            // Obtener referencias a los inputs
+            var inputLat = document.getElementById('Latitud');
+            var inputLng = document.getElementById('Longitud');
+            var coordDisplay = document.getElementById('coord-display');
+
+            // Determinar posición inicial si existen valores
+            if (inputLat.value && inputLng.value) {
+                var lat = parseFloat(inputLat.value.replace(',', '.'));
+                var lng = parseFloat(inputLng.value.replace(',', '.'));
+                
+                if(!isNaN(lat) && !isNaN(lng)) {
+                    defaultLat = Math.max(-90, Math.min(90, lat));
+                    defaultLng = Math.max(-180, Math.min(180, lng));
+                }
+            }
+
+            // Inicializar el mapa
+            var map = L.map('interactive-map').setView([defaultLat, defaultLng], initialZoom);
+
+            // Agregar la capa de mapa base de OpenStreetMap
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            }).addTo(map);
+
+            // Colocar marcador inicial
+            var marker = L.marker([defaultLat, defaultLng]).addTo(map);
+            coordDisplay.textContent = defaultLat.toFixed(5) + ", " + defaultLng.toFixed(5);
+
+            // Escuchar clics en el mapa para mover marcador
+            map.on('click', function(e) {
+                var lat = e.latlng.lat;
+                var lng = e.latlng.lng;
+
+                marker.setLatLng(e.latlng);
+
+                // Actualizar los inputs del formulario (para enviar al backend)
+                inputLat.value = lat;
+                inputLng.value = lng;
+
+                // Actualizar el texto visual
+                coordDisplay.textContent = lat.toFixed(5) + ", " + lng.toFixed(5);
+                
+                inputLat.dispatchEvent(new Event('input'));
+                inputLng.dispatchEvent(new Event('input'));
+            });
+        });
+    </script>
+}

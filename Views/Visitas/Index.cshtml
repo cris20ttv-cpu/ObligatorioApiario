@@ -1,0 +1,159 @@
+@model IEnumerable<ObligatorioApiario.Models.Visita>
+
+@{
+    ViewData["Title"] = "Mis Visitas";
+}
+
+<div class="apiarios-page-container">
+    <div class="page-header d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="page-title">Mis Visitas</h1>
+            <p class="page-description">Gestiona tus salidas al campo, programa tareas y asigna recursos.</p>
+        </div>
+        <a asp-action="Create" class="btn-primary">
+            <i class="fa-solid fa-plus me-2"></i> Nueva Visita
+        </a>
+    </div>
+
+    <!-- PENDIENTES -->
+    @if (!((IEnumerable<ObligatorioApiario.Models.Visita>)ViewBag.Pendientes).Any())
+    {
+        <div class="empty-state-container">
+            <div class="empty-state">
+                <div class="empty-state-icon-wrapper">
+                    <i class="fa-solid fa-check-double empty-state-icon text-success"></i>
+                </div>
+                <h1>¡Todo al día!</h1>
+                <p>No tienes visitas pendientes por realizar.</p>
+                <a asp-action="Create" class="btn-primary">Programar Nueva Visita</a>
+            </div>
+        </div>
+    }
+            else
+            {
+                <div class="apiarios-grid">
+                    @foreach (var item in (IEnumerable<ObligatorioApiario.Models.Visita>)ViewBag.Pendientes)
+                    {
+                        <div class="apiario-card">
+                            <div class="card-img-container">
+                                <img class="card-img" src="https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=800&auto=format&fit=crop" alt="Visita de campo" />
+                                <span class="zona-badge">
+                                    <i class="fa-solid fa-calendar-day"></i> @item.Fecha.ToString("dd/MM/yyyy")
+                                </span>
+                            </div>
+                            
+                            <div class="apiario-card-body">
+                                <div class="apiario-card-header">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h2 class="apiario-title">@item.Temporada</h2>
+                                            <div class="apiario-id">ID: VST-@item.ID_Visita.ToString("D5")</div>
+                                        </div>
+                                        <span class="status-badge status-warning">PENDIENTE</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="apiario-stats mb-3" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="fa-solid fa-user-tie text-muted"></i>
+                                        <span style="font-weight: 600; color: #3e200c;">@item.Apicultor?.Nombre</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="fa-solid fa-list-check text-muted"></i>
+                                        <span style="font-size: 0.85rem; color: #757575;">
+                                            @item.Tareas.Count(t => t.Estado == "Completada") / @item.Tareas.Count() Tareas completadas
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="apiario-card-footer">
+                                    <a asp-action="Details" asp-route-id="@item.ID_Visita" class="detail-link">
+                                        Ver Detalles <i class="fa-solid fa-arrow-right"></i>
+                                    </a>
+                                    <div class="card-actions d-flex gap-3">
+                                        <a asp-action="Edit" asp-route-id="@item.ID_Visita" style="color: #6c757d; font-size: 1.1rem; transition: color 0.2s;" onmouseover="this.style.color='#a35a16'" onmouseout="this.style.color='#6c757d'">
+                                            <i class="fa-solid fa-pen"></i>
+                                        </a>
+                                        <a asp-action="Delete" asp-route-id="@item.ID_Visita" style="color: #dc3545; font-size: 1.1rem; transition: color 0.2s;" onmouseover="this.style.color='#a71d2a'" onmouseout="this.style.color='#dc3545'">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+
+    <!-- SEPARADOR -->
+    <div class="mt-5 mb-4" style="border-top: 1px dashed rgba(255,255,255,0.2); padding-top: 2rem;">
+        <h2 style="font-size: 1.5rem; font-weight: 600; color: #e2d7be; display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-box-archive"></i> Visitas Completadas
+            <span style="font-size: 0.9rem; background: rgba(255,255,255,0.1); padding: 2px 10px; border-radius: 20px;">@(((IEnumerable<ObligatorioApiario.Models.Visita>)ViewBag.Completadas).Count())</span>
+        </h2>
+        <p style="color: #999; font-size: 0.95rem;">Historial de salidas donde todas las tareas fueron realizadas.</p>
+    </div>
+
+    <!-- COMPLETADAS -->
+    @if (!((IEnumerable<ObligatorioApiario.Models.Visita>)ViewBag.Completadas).Any())
+    {
+        <div class="empty-state-container" style="background: rgba(0,0,0,0.2);">
+            <div class="empty-state">
+                <div class="empty-state-icon-wrapper" style="background: rgba(255,255,255,0.05);">
+                    <i class="fa-solid fa-box-open empty-state-icon text-muted"></i>
+                </div>
+                <h1 style="color: #999;">Sin historial</h1>
+                <p style="color: #777;">Aún no has completado ninguna visita.</p>
+            </div>
+        </div>
+    }
+            else
+            {
+                <div class="apiarios-grid">
+                    @foreach (var item in (IEnumerable<ObligatorioApiario.Models.Visita>)ViewBag.Completadas)
+                    {
+                        <div class="apiario-card" style="opacity: 0.85;">
+                            <div class="card-img-container">
+                                <img class="card-img" src="https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=800&auto=format&fit=crop" alt="Visita de campo" style="filter: grayscale(40%);" />
+                                <span class="zona-badge" style="background: rgba(46, 125, 50, 0.9);">
+                                    <i class="fa-solid fa-calendar-check"></i> @item.Fecha.ToString("dd/MM/yyyy")
+                                </span>
+                            </div>
+                            
+                            <div class="apiario-card-body">
+                                <div class="apiario-card-header">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h2 class="apiario-title">@item.Temporada</h2>
+                                            <div class="apiario-id">ID: VST-@item.ID_Visita.ToString("D5")</div>
+                                        </div>
+                                        <span class="status-badge" style="background: #d4edda; color: #155724; border: 1px solid #c3e6cb;">COMPLETADA</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="apiario-stats mb-3" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="fa-solid fa-user-tie text-muted"></i>
+                                        <span style="font-weight: 600; color: #3e200c;">@item.Apicultor?.Nombre</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="fa-solid fa-check-double text-success"></i>
+                                        <span style="font-size: 0.85rem; color: #757575;">
+                                            @item.Tareas.Count() Tareas completadas
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="apiario-card-footer">
+                                    <a asp-action="Details" asp-route-id="@item.ID_Visita" class="detail-link">
+                                        Ver Registro <i class="fa-solid fa-arrow-right"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+</div>

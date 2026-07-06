@@ -1,0 +1,325 @@
+@{
+    ViewData["Title"] = "Registrar Cosecha Trazable";
+    var colmenas = ViewBag.ColmenasActivas as List<ObligatorioApiario.Models.Colmena>;
+    var jsonColmenas = System.Text.Json.JsonSerializer.Serialize(colmenas?.Select(c => new { id = c.ID_Colmena, ident = c.Identificador }));
+}
+
+<div style="max-width: 1000px; margin: 0 auto; padding-bottom: 3rem;">
+    <div class="breadcrumb">
+        <span class="breadcrumb-item text-muted">Apiarios</span>
+        <i class="fa-solid fa-chevron-right breadcrumb-separator"></i>
+        <a asp-controller="Apiarios" asp-action="Details" asp-route-id="@ViewBag.ApiarioId" class="breadcrumb-item text-muted" style="text-decoration: none;">@ViewBag.ApiarioNombre</a>
+        <i class="fa-solid fa-chevron-right breadcrumb-separator"></i>
+        <span class="breadcrumb-item breadcrumb-active">Trazabilidad de Cosecha</span>
+    </div>
+
+    <h1 class="page-title">Registrar Cosecha</h1>
+    <p class="page-description">Agrega barriles y distribuye la miel extraída de cada colmena. Capacidad máxima: 300kg por barril.</p>
+
+    <!-- FORMULARIO GENERAL -->
+    <div class="card general-info-card mb-4">
+        <div class="card-header"><i class="fa-solid fa-file-lines"></i> Datos Generales</div>
+        <div class="card-body">
+            <div class="form-row">
+                <div class="form-group col-half">
+                    <label class="form-label">FECHA DE COSECHA</label>
+                    <input type="date" id="inputFecha" class="form-input" readonly disabled />
+                </div>
+                <div class="form-group col-half">
+                    <label class="form-label">TIPO DE MIEL</label>
+                    <input type="text" id="inputTipo" class="form-input" placeholder="Ej: Monofloral Eucalipto" required />
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-half">
+                    <label class="form-label">ESTADO</label>
+                    <select id="inputEstado" class="form-input form-select">
+                        <option value="Completada">Completada</option>
+                        <option value="En Proceso">En Proceso</option>
+                    </select>
+                </div>
+                <div class="form-group col-half">
+                    <label class="form-label">OBSERVACIONES</label>
+                    <input type="text" id="inputObs" class="form-input" placeholder="Opcional..." />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GESTOR DE BARRILES -->
+    <div class="card mb-4" style="border: 1px solid #e8e3dc; border-radius: 12px; background: white;">
+        <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #fdf3e8; border-bottom: 1px solid #f2e7db; padding: 15px 20px; border-radius: 12px 12px 0 0;">
+            <div style="font-weight: 700; color: #8c4b14;"><i class="fa-solid fa-boxes-stacked"></i> Barriles a Llenar</div>
+            <button type="button" class="btn-primary" style="padding: 6px 12px; font-size: 0.85rem;" onclick="addBarrel()">
+                <i class="fa-solid fa-plus"></i> Añadir Barril
+            </button>
+        </div>
+        <div class="card-body p-4" id="barrelsContainer" style="display: flex; gap: 15px; flex-wrap: wrap;">
+            <!-- Barriles generados dinámicamente -->
+        </div>
+    </div>
+
+    <!-- LISTADO DE COLMENAS -->
+    <div class="card mb-4" style="border: 1px solid #e8e3dc; border-radius: 12px; background: white;">
+        <div class="card-header" style="background-color: #fdf3e8; border-bottom: 1px solid #f2e7db; padding: 15px 20px; border-radius: 12px 12px 0 0; font-weight: 700; color: #8c4b14;">
+            <i class="fa-solid fa-forumbee"></i> Distribución de Miel por Colmena Activa
+        </div>
+        <div class="card-body p-0">
+            <table class="table" style="width: 100%; border-collapse: collapse;">
+                <thead style="background-color: #fcfaf8;">
+                    <tr>
+                        <th style="padding: 12px 20px; text-align: left; color: #7a6e62; font-size: 0.85rem;">COLMENA</th>
+                        <th style="padding: 12px 20px; text-align: left; color: #7a6e62; font-size: 0.85rem;">APORTES (Kilos -> Barril)</th>
+                        <th style="padding: 12px 20px; text-align: right; color: #7a6e62; font-size: 0.85rem;">ACCIÓN</th>
+                    </tr>
+                </thead>
+                <tbody id="colmenasContainer">
+                    <!-- Se renderizará con JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ERROR Y GUARDAR -->
+    <div id="errorAlert" style="display: none; background: #ffebee; color: #c62828; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-weight: 600;">
+        <i class="fa-solid fa-triangle-exclamation"></i> <span id="errorText"></span>
+    </div>
+
+    <div class="form-actions" style="display: flex; justify-content: flex-end; gap: 15px;">
+        <a asp-controller="Apiarios" asp-action="Details" asp-route-id="@ViewBag.ApiarioId" class="btn-outline" style="text-decoration:none;">Cancelar</a>
+        <button type="button" class="btn-primary" onclick="submitCosecha()">
+            <i class="fa-solid fa-check-double"></i> Finalizar y Guardar
+        </button>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const colmenasData = @Html.Raw(jsonColmenas);
+        const apiarioId = @ViewBag.ApiarioId;
+        const CAPACIDAD_MAXIMA = 300.00;
+
+        let barriles = []; // { id: 'b1', name: 'Barril 1', total: 0 }
+        let aportes = []; // { id: 1, colmenaId: 1, barrilId: 'b1', kilos: 10 }
+        let barrilCount = 0;
+        let aporteCount = 0;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Asignar la fecha local del navegador
+            const today = new Date();
+            const localDate = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+            document.getElementById('inputFecha').value = localDate;
+
+            // Iniciar con 1 barril
+            addBarrel();
+            renderColmenas();
+        });
+
+        function addBarrel() {
+            barrilCount++;
+            const id = 'b' + barrilCount;
+            barriles.push({ id: id, name: 'Barril ' + barrilCount, total: 0 });
+            renderBarriles();
+            renderColmenas(); // Actualizar selects
+        }
+
+        function calculateTotals() {
+            // Reset totals
+            barriles.forEach(b => b.total = 0);
+            
+            // Sumar aportes
+            aportes.forEach(a => {
+                const b = barriles.find(x => x.id === a.barrilId);
+                if(b) b.total += parseFloat(a.kilos) || 0;
+            });
+        }
+
+        function renderBarriles() {
+            calculateTotals();
+            const container = document.getElementById('barrelsContainer');
+            container.innerHTML = '';
+            
+            if(barriles.length === 0) {
+                container.innerHTML = '<span class="text-muted">No hay barriles creados.</span>';
+                return;
+            }
+
+            barriles.forEach(b => {
+                const isOver = b.total > CAPACIDAD_MAXIMA;
+                const percent = Math.min((b.total / CAPACIDAD_MAXIMA) * 100, 100);
+                const color = isOver ? '#c62828' : (percent > 90 ? '#e65100' : '#4caf50');
+                const bgOver = isOver ? '#ffebee' : '#f8f9fa';
+                const borderOver = isOver ? '2px solid #c62828' : '1px solid #e8e3dc';
+
+                const card = document.createElement('div');
+                card.style = `flex: 1; min-width: 200px; padding: 15px; background: ${bgOver}; border: ${borderOver}; border-radius: 8px; position: relative;`;
+                card.innerHTML = `
+                    <div style="font-weight: 700; color: #5c4e40; margin-bottom: 8px;">${b.name}</div>
+                    <div style="font-size: 1.2rem; font-weight: 800; color: ${color}; margin-bottom: 8px;">
+                        ${b.total.toFixed(2)} <span style="font-size: 0.8rem; color: #7a6e62;">/ ${CAPACIDAD_MAXIMA} kg</span>
+                    </div>
+                    <div style="width: 100%; background-color: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden;">
+                        <div style="width: ${percent}%; background-color: ${color}; height: 100%; transition: width 0.3s;"></div>
+                    </div>
+                    ${isOver ? '<div style="color: #c62828; font-size: 0.75rem; margin-top: 5px; font-weight: 600;"><i class="fa-solid fa-warning"></i> Excede límite</div>' : ''}
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function renderColmenas() {
+            const container = document.getElementById('colmenasContainer');
+            container.innerHTML = '';
+
+            colmenasData.forEach(c => {
+                const tr = document.createElement('tr');
+                tr.style = "border-bottom: 1px solid #e8e3dc;";
+                
+                // Buscar aportes de esta colmena
+                const aportesColmena = aportes.filter(a => a.colmenaId === c.id);
+                
+                let aportesHtml = '';
+                if(aportesColmena.length === 0) {
+                    aportesHtml = '<span style="color: #bcaaa4; font-style: italic; font-size: 0.85rem;">Sin aportes registrados</span>';
+                } else {
+                    aportesColmena.forEach(a => {
+                        const barril = barriles.find(b => b.id === a.barrilId);
+                        const bName = barril ? barril.name : 'Desc';
+                        aportesHtml += `
+                            <div style="display: flex; gap: 10px; margin-bottom: 6px; align-items: center;">
+                                <input type="number" step="0.1" min="0" class="form-input" style="width: 80px; padding: 6px;" value="${a.kilos}" onchange="updateAporte(${a.id}, 'kilos', this.value)"> <span style="font-size: 0.8rem;">kg ➔</span>
+                                <select class="form-input form-select" style="width: 120px; padding: 6px;" onchange="updateAporte(${a.id}, 'barrilId', this.value)">
+                                    ${barriles.map(b => `<option value="${b.id}" ${b.id === a.barrilId ? 'selected' : ''}>${b.name}</option>`).join('')}
+                                </select>
+                                <button type="button" onclick="deleteAporte(${a.id})" style="background: none; border: none; color: #c62828; cursor: pointer;" title="Eliminar"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        `;
+                    });
+                }
+
+                tr.innerHTML = `
+                    <td style="padding: 15px 20px; vertical-align: top; font-weight: 600; color: #5c4e40;">
+                        <i class="fa-brands fa-forumbee" style="color: #d48e45;"></i> ${c.ident}
+                    </td>
+                    <td style="padding: 15px 20px; vertical-align: top;">
+                        ${aportesHtml}
+                    </td>
+                    <td style="padding: 15px 20px; vertical-align: top; text-align: right;">
+                        <button type="button" class="btn-outline" style="padding: 6px 12px; font-size: 0.8rem;" onclick="addAporte(${c.id})">
+                            <i class="fa-solid fa-plus"></i> Extraer
+                        </button>
+                    </td>
+                `;
+                container.appendChild(tr);
+            });
+        }
+
+        function addAporte(colmenaId) {
+            if(barriles.length === 0) {
+                showError("Debes añadir al menos un barril primero.");
+                return;
+            }
+            aporteCount++;
+            aportes.push({
+                id: aporteCount,
+                colmenaId: colmenaId,
+                barrilId: barriles[0].id,
+                kilos: 0
+            });
+            renderColmenas();
+            renderBarriles();
+        }
+
+        function updateAporte(aporteId, field, value) {
+            const aporte = aportes.find(a => a.id === aporteId);
+            if(aporte) {
+                if(field === 'kilos') {
+                    // Validar números negativos
+                    if(parseFloat(value) < 0) value = 0;
+                    aporte.kilos = parseFloat(value) || 0;
+                } else {
+                    aporte[field] = value;
+                }
+                renderBarriles();
+            }
+        }
+
+        function deleteAporte(aporteId) {
+            aportes = aportes.filter(a => a.id !== aporteId);
+            renderColmenas();
+            renderBarriles();
+        }
+
+        function showError(msg) {
+            const alert = document.getElementById('errorAlert');
+            document.getElementById('errorText').innerText = msg;
+            alert.style.display = 'block';
+            setTimeout(() => alert.style.display = 'none', 5000);
+        }
+
+        function submitCosecha() {
+            // Validaciones
+            const fecha = document.getElementById('inputFecha').value;
+            const tipo = document.getElementById('inputTipo').value;
+            
+            if(!fecha || !tipo) {
+                showError("Debes ingresar la fecha y el tipo de miel.");
+                return;
+            }
+
+            if(barriles.length === 0) {
+                showError("Debes crear al menos un barril.");
+                return;
+            }
+
+            calculateTotals();
+            const excede = barriles.some(b => b.total > CAPACIDAD_MAXIMA);
+            if(excede) {
+                showError("¡No se puede guardar! Hay barriles que superan la capacidad máxima de " + CAPACIDAD_MAXIMA + " kg.");
+                return;
+            }
+
+            const vacios = barriles.some(b => b.total <= 0);
+            if(vacios) {
+                showError("¡No se puede guardar! Todos los barriles creados deben tener al menos 0.1 kg de miel.");
+                return;
+            }
+
+            // Preparar JSON
+            const payload = {
+                apiarioId: apiarioId,
+                fecha: fecha,
+                tipoMiel: tipo,
+                estado: document.getElementById('inputEstado').value,
+                observaciones: document.getElementById('inputObs').value,
+                barriles: barriles.map(b => b.id),
+                aportes: aportes.map(a => ({
+                    colmenaId: a.colmenaId,
+                    kilos: a.kilos,
+                    tempBarrelId: a.barrilId
+                })).filter(a => a.kilos > 0) // Solo enviar aportes con kilos > 0
+            };
+
+            // Enviar con Fetch
+            fetch('/Cosechas/CreateJson', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    window.location.href = data.redirectUrl;
+                } else {
+                    showError(data.message || "Error al guardar en el servidor.");
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showError("Error de conexión al guardar.");
+            });
+        }
+    </script>
+}

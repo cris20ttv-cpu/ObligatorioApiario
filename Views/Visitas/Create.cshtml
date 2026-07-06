@@ -1,0 +1,348 @@
+@model ObligatorioApiario.Models.Visita
+
+@{
+    ViewData["Title"] = "Programar Visita Completa";
+}
+
+<style>
+    .dynamic-list {
+        background: #fdfbf7;
+        border: 1px solid #e8e3dc;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    .tarea-row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 10px;
+        padding: 10px;
+        background: white;
+        border: 1px solid #f0ebe1;
+        border-radius: 6px;
+    }
+    .tarea-row:last-child {
+        margin-bottom: 0;
+    }
+    .btn-add-tarea {
+        background: #fdfbf7;
+        border: 1px dashed #d4a373;
+        color: #d4a373;
+        padding: 8px 15px;
+        border-radius: 6px;
+        cursor: pointer;
+        width: 100%;
+        text-align: center;
+        margin-top: 10px;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+    .btn-add-tarea:hover {
+        background: #faedcd;
+    }
+    .btn-remove {
+        background: #fdf0f0;
+        color: #e5989b;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+    .btn-remove:hover {
+        background: #f8d7da;
+        color: #c62828;
+    }
+    .section-title {
+        font-size: 1.1rem;
+        color: #5c4e40;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #f0ebe1;
+    }
+</style>
+
+<div style="max-width: 1000px; margin: 0 auto;">
+    <div class="breadcrumb">
+        <span class="breadcrumb-item text-muted">Visitas</span>
+        <i class="fa-solid fa-chevron-right breadcrumb-separator"></i>
+        <span class="breadcrumb-item breadcrumb-active">Planificación Avanzada</span>
+    </div>
+
+    <h1 class="page-title">Planificar Visita</h1>
+    <p class="page-description">Configura la visita, selecciona herramientas y asigna tareas a colmenas específicas.</p>
+
+    <div class="cards-layout" style="grid-template-columns: 1fr;">
+        <div class="card">
+            <div class="card-body">
+                <form id="visitaForm" onsubmit="submitVisita(event)">
+                    
+                    <h3 class="section-title"><i class="fa-solid fa-route"></i> Detalles Generales</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group col-half">
+                            <label class="form-label">APIARIO <i class="fa-solid fa-circle-exclamation required-icon"></i></label>
+                            <select id="apiarioSelect" class="form-input form-select" required onchange="loadColmenas()">
+                                <option value="">Seleccione un apiario...</option>
+                                @if (ViewBag.Apiarios != null)
+                                {
+                                    foreach (var apiario in ViewBag.Apiarios)
+                                    {
+                                        <option value="@apiario.ID_Apiario">@apiario.Nombre (@apiario.Zona)</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="form-group col-half">
+                            <label class="form-label">APICULTOR RESPONSABLE <i class="fa-solid fa-circle-exclamation required-icon"></i></label>
+                            <select id="apicultorSelect" class="form-input form-select" asp-items="ViewBag.CIApicultor" required>
+                                <option value="">Seleccione un apicultor...</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-half">
+                            <label class="form-label">FECHA PROGRAMADA <i class="fa-solid fa-circle-exclamation required-icon"></i></label>
+                            <input type="date" id="fechaInput" class="form-input" min="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                        </div>
+                        <div class="form-group col-half">
+                            <label class="form-label">TEMPORADA <i class="fa-solid fa-circle-exclamation required-icon"></i></label>
+                            <input type="text" id="temporadaInput" class="form-input" placeholder="Ej: Primavera 2026" required />
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">OBSERVACIONES</label>
+                        <textarea id="observacionesInput" class="form-input form-textarea" placeholder="Notas sobre el objetivo de la visita..."></textarea>
+                    </div>
+
+                    <h3 class="section-title mt-4"><i class="fa-solid fa-toolbox"></i> Herramientas Necesarias</h3>
+                    <div class="dynamic-list" id="herramientasContainer">
+                        <p id="noHerramientasMsg" class="text-muted" style="text-align:center; font-style:italic;">No hay herramientas seleccionadas. Haga clic en agregar.</p>
+                        <div id="herramientasList"></div>
+                        <button type="button" class="btn-add-tarea" onclick="addHerramientaRow()" id="btnAddHerramienta">
+                            <i class="fa-solid fa-plus"></i> Agregar Herramienta
+                        </button>
+                    </div>
+
+                    <h3 class="section-title mt-4"><i class="fa-solid fa-list-check"></i> Tareas por Colmena</h3>
+                    <div class="dynamic-list" id="tareasContainer">
+                        <p id="noTareasMsg" class="text-muted" style="text-align:center; font-style:italic;">No hay tareas asignadas. Haga clic en agregar para comenzar.</p>
+                        <div id="tareasList"></div>
+                        <button type="button" class="btn-add-tarea" onclick="addTareaRow()" id="btnAddTarea" disabled>
+                            <i class="fa-solid fa-plus"></i> Agregar Tarea
+                        </button>
+                    </div>
+
+                    <div id="errorMessage" class="text-danger mb-3" style="display:none; font-weight:bold;"></div>
+
+                    <div class="form-actions mt-4">
+                        <a asp-action="Index" class="btn-outline">Cancelar</a>
+                        <button type="submit" class="btn-primary" id="btnSubmit">
+                            <i class="fa-regular fa-circle-check"></i> Guardar Visita
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let colmenasDisponibles = [];
+
+        document.addEventListener("DOMContentLoaded", function() {
+            // Asignar fecha local
+            const today = new Date();
+            const localDate = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+            document.getElementById('fechaInput').value = localDate;
+        });
+
+        async function loadColmenas() {
+            const apiarioId = document.getElementById('apiarioSelect').value;
+            const btnAdd = document.getElementById('btnAddTarea');
+            const list = document.getElementById('tareasList');
+            
+            list.innerHTML = '';
+            document.getElementById('noTareasMsg').style.display = 'block';
+
+            if (!apiarioId) {
+                btnAdd.disabled = true;
+                colmenasDisponibles = [];
+                return;
+            }
+
+            try {
+                const response = await fetch(`/Visitas/GetColmenasPorApiario?apiarioId=${apiarioId}`);
+                if (response.ok) {
+                    colmenasDisponibles = await response.json();
+                    btnAdd.disabled = colmenasDisponibles.length === 0;
+                    if(colmenasDisponibles.length === 0) {
+                        alert("Este apiario no tiene colmenas instaladas.");
+                    }
+                }
+            } catch (err) {
+                console.error("Error al cargar colmenas:", err);
+            }
+        }
+
+        function addTareaRow() {
+            document.getElementById('noTareasMsg').style.display = 'none';
+            const list = document.getElementById('tareasList');
+            
+            const row = document.createElement('div');
+            row.className = 'tarea-row';
+            
+            let options = '<option value="">Seleccione colmena...</option>';
+            colmenasDisponibles.forEach(c => {
+                options += `<option value="${c.id}">${c.identificador} (${c.estado})</option>`;
+            });
+
+            row.innerHTML = `
+                <div style="flex: 1;">
+                    <select class="form-input form-select colmena-select" required>
+                        ${options}
+                    </select>
+                </div>
+                <div style="flex: 2;">
+                    <input type="text" class="form-input tarea-desc" placeholder="Descripción de la tarea (Ej: Segunda dosis de jarabe)" required />
+                </div>
+                <button type="button" class="btn-remove" onclick="this.parentElement.remove(); checkEmpty();">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            `;
+            list.appendChild(row);
+        }
+
+        function checkEmpty() {
+            const list = document.getElementById('tareasList');
+            if (list.children.length === 0) {
+                document.getElementById('noTareasMsg').style.display = 'block';
+            }
+        }
+
+        const herramientasDisponibles = [
+            @if (ViewBag.Herramientas != null)
+            {
+                foreach (var h in ViewBag.Herramientas)
+                {
+                    @:{ id: @h.ID_Herramienta, nombre: '@Html.Raw(h.Nombre)', tipo: '@Html.Raw(h.Tipo)' },
+                }
+            }
+        ];
+
+        function addHerramientaRow() {
+            document.getElementById('noHerramientasMsg').style.display = 'none';
+            const list = document.getElementById('herramientasList');
+            
+            const row = document.createElement('div');
+            row.className = 'tarea-row';
+            
+            let options = '';
+            herramientasDisponibles.forEach(h => {
+                options += `<option value="${h.nombre}">`;
+            });
+            
+            const datalistId = 'herramientas-list-' + Date.now();
+
+            row.innerHTML = `
+                <div style="flex: 2;">
+                    <input type="text" list="${datalistId}" class="form-input herramienta-nombre" placeholder="Nombre de la herramienta..." required />
+                    <datalist id="${datalistId}">
+                        ${options}
+                    </datalist>
+                </div>
+                <div style="flex: 1;">
+                    <input type="number" class="form-input herramienta-cant" placeholder="Cantidad" min="1" value="1" required />
+                </div>
+                <button type="button" class="btn-remove" onclick="this.parentElement.remove(); checkEmptyHerramientas();">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            `;
+            list.appendChild(row);
+        }
+
+        function checkEmptyHerramientas() {
+            const list = document.getElementById('herramientasList');
+            if (list.children.length === 0) {
+                document.getElementById('noHerramientasMsg').style.display = 'block';
+            }
+        }
+
+        async function submitVisita(e) {
+            e.preventDefault();
+            
+            const btnSubmit = document.getElementById('btnSubmit');
+            const errorMsg = document.getElementById('errorMessage');
+            
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
+            errorMsg.style.display = 'none';
+
+            // Recopilar Herramientas
+            const herramientas = [];
+            document.querySelectorAll('#herramientasList .tarea-row').forEach(row => {
+                const nombreH = row.querySelector('.herramienta-nombre').value;
+                const cant = row.querySelector('.herramienta-cant').value;
+                if (nombreH && cant) {
+                    herramientas.push({ Nombre: nombreH, Cantidad: parseInt(cant) });
+                }
+            });
+
+            // Recopilar Tareas
+            const tareas = [];
+            document.querySelectorAll('#tareasList .tarea-row').forEach(row => {
+                const cId = row.querySelector('.colmena-select').value;
+                const desc = row.querySelector('.tarea-desc').value;
+                if (cId && desc) {
+                    tareas.push({ ColmenaId: parseInt(cId), Descripcion: desc });
+                }
+            });
+
+            if (tareas.length === 0) {
+                errorMsg.innerText = "Debe asignar al menos una tarea a una colmena (ej: Revisión general).";
+                errorMsg.style.display = 'block';
+                btnSubmit.disabled = false;
+                btnSubmit.innerHTML = '<i class="fa-regular fa-circle-check"></i> Guardar Visita';
+                return;
+            }
+
+            const payload = {
+                ApiarioId: parseInt(document.getElementById('apiarioSelect').value),
+                ApicultorId: parseInt(document.getElementById('apicultorSelect').value),
+                Fecha: document.getElementById('fechaInput').value,
+                Temporada: document.getElementById('temporadaInput').value,
+                Observaciones: document.getElementById('observacionesInput').value,
+                Herramientas: herramientas,
+                Tareas: tareas
+            };
+
+            try {
+                const response = await fetch('/Visitas/CreateJson', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    window.location.href = result.url;
+                } else {
+                    errorMsg.innerText = result.error || "Ocurrió un error al guardar la visita.";
+                    errorMsg.style.display = 'block';
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerHTML = '<i class="fa-regular fa-circle-check"></i> Guardar Visita';
+                }
+            } catch (err) {
+                console.error(err);
+                errorMsg.innerText = "Error de conexión.";
+                errorMsg.style.display = 'block';
+                btnSubmit.disabled = false;
+                btnSubmit.innerHTML = '<i class="fa-regular fa-circle-check"></i> Guardar Visita';
+            }
+        }
+    </script>
+}

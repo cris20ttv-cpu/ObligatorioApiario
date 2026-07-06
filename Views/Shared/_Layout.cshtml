@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Zanganos S.A.</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <!-- FontAwesome para los íconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Overlay para móviles -->
+        <div id="sidebar-overlay" class="sidebar-overlay"></div>
+        
+        <!-- BARRA LATERAL (SIDEBAR) -->
+        <aside class="sidebar" id="main-sidebar">
+            <a asp-controller="Home" asp-action="Index" class="sidebar-brand">
+                <div class="brand-icon"></div>
+                <div class="brand-text">
+                    <span class="brand-title" style="font-family: 'Lora', serif; font-size: 1.8rem;">Zánganos</span>
+                    <span class="brand-subtitle">Gestión Apícola</span>
+                </div>
+            </a>
+
+            <nav class="sidebar-nav">
+                <a asp-controller="Home" asp-action="Index" class="nav-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" ? "active" : "")">
+                    <i class="fa-solid fa-border-all"></i> Inicio
+                </a>
+                <a asp-controller="Apiarios" asp-action="Index" class="nav-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Apiarios" ? "active" : "")">
+                    <i class="fa-solid fa-boxes-stacked"></i> Apiarios
+                </a>
+                <a asp-controller="Visitas" asp-action="Index" class="nav-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Visitas" ? "active" : "")">
+                    <i class="fa-solid fa-route"></i> Visitas
+                </a>
+                <a asp-controller="Barriles" asp-action="Index" class="nav-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Barriles" ? "active" : "")">
+                    <i class="fa-solid fa-oil-can"></i> Barriles
+                </a>
+            </nav>
+
+
+        </aside>
+
+        <!-- ÁREA PRINCIPAL -->
+        <main class="main-content">
+            <!-- BARRA SUPERIOR (TOPBAR) PARA MÓVILES -->
+            <header class="topbar" style="justify-content: flex-start; border-bottom: none; background: transparent;">
+                <div class="d-flex align-items-center gap-3">
+                    <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Abrir menú">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- CONTENIDO DE PÁGINA -->
+            <div class="page-content">
+                @RenderBody()
+            </div>
+        </main>
+    </div>
+
+    @await RenderSectionAsync("Scripts", required: false)
+
+    <!-- Script para menú responsivo -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const mobileBtn = document.getElementById('mobile-menu-btn');
+            const sidebar = document.getElementById('main-sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+
+            function toggleMenu() {
+                sidebar.classList.toggle('sidebar-open');
+                overlay.classList.toggle('overlay-open');
+            }
+
+            if (mobileBtn && sidebar && overlay) {
+                mobileBtn.addEventListener('click', toggleMenu);
+                overlay.addEventListener('click', toggleMenu);
+            }
+        });
+    </script>
+</body>
+</html>

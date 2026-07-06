@@ -1,0 +1,61 @@
+@model ObligatorioApiario.Models.Colmena
+
+@{
+    ViewData["Title"] = "Editar Colmena";
+}
+
+<div style="max-width: 1000px; margin: 0 auto; padding-bottom: 2rem;">
+    <div class="details-header d-flex justify-content-between align-items-center mb-4">
+        <h1 class="page-title" style="margin: 0; font-size: 2.2rem; font-weight: 800; color: #8c4b14;">Editar Colmena</h1>
+    </div>
+
+    <form asp-action="Edit" method="post" class="apiario-form">
+        <input type="hidden" asp-for="ID_Colmena" />
+        <input type="hidden" asp-for="Identificador" />
+
+        <div class="cards-layout">
+            <div class="card general-info-card" style="border-radius: 12px; margin-bottom: 24px;">
+                <div class="card-body p-4">
+                    <div class="form-row" style="display: flex; gap: 20px; margin-bottom: 16px;">
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label" style="font-size: 0.8rem; font-weight: 700; color: #7a6e62;">APIARIO ACTUAL</label>
+                            <select name="apiarioId" asp-items="@ViewBag.ApiariosList" class="form-input form-select" style="width: 100%; padding: 10px 14px; border: 1.5px solid #e8e3dc; border-radius: 8px;">
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label asp-for="Cant_Abejas_Estimada" class="form-label" style="font-size: 0.8rem; font-weight: 700; color: #7a6e62;">CANTIDAD DE ABEJAS</label>
+                            <input asp-for="Cant_Abejas_Estimada" class="form-input" style="width: 100%; padding: 10px 14px; border: 1.5px solid #e8e3dc; border-radius: 8px;" type="number" min="0" />
+                        </div>
+                    </div>
+                    <div class="form-row" style="display: flex; gap: 20px; margin-bottom: 16px;">
+                        <div class="form-group" style="flex: 1;">
+                            <label asp-for="Estado" class="form-label" style="font-size: 0.8rem; font-weight: 700; color: #7a6e62;">ESTADO</label>
+                            <select asp-for="Estado" class="form-input form-select" style="width: 100%; padding: 10px 14px; border: 1.5px solid #e8e3dc; border-radius: 8px;">
+                                <option value="Saludable">Saludable</option>
+                                <option value="Fuerte">Fuerte</option>
+                                <option value="En Observación">En Observación</option>
+                                <option value="Débil">Débil</option>
+                                <option value="Enferma">Enferma</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label asp-for="Cant_Bastidores" class="form-label" style="font-size: 0.8rem; font-weight: 700; color: #7a6e62;">CANTIDAD DE BASTIDORES</label>
+                            <input asp-for="Cant_Bastidores" class="form-input" style="width: 100%; padding: 10px 14px; border: 1.5px solid #e8e3dc; border-radius: 8px;" type="number" min="1" max="20" />
+                        </div>
+                    </div>
+                    <div class="form-row" style="display: flex; gap: 20px; margin-bottom: 16px;">
+                        <div class="form-group" style="flex: 1;">
+                            <label asp-for="Fortaleza_Abejas" class="form-label" style="font-size: 0.8rem; font-weight: 700; color: #7a6e62;">FORTALEZA ABEJAS</label>
+                            <input asp-for="Fortaleza_Abejas" class="form-input" style="width: 100%; padding: 10px 14px; border: 1.5px solid #e8e3dc; border-radius: 8px;" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions mt-4" style="display: flex; gap: 16px;">
+            <a asp-action="Details" asp-controller="Apiarios" asp-route-id="@ViewBag.ApiarioId" class="btn-outline" style="border: 1.5px solid #e8e3dc; background: transparent; color: #7a6e62; padding: 12px 24px; border-radius: 8px; font-weight: 700; text-decoration: none;">Cancelar</a>
+            <button type="submit" class="btn-primary" style="background-color: #8c4b14; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; cursor: pointer;">Guardar</button>
+        </div>
+    </form>
+</div>

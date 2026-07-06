@@ -1,0 +1,197 @@
+@model ObligatorioApiario.Models.Visita
+
+@{
+    ViewData["Title"] = "Detalle de Visita";
+}
+
+<div class="details-page-container">
+    <div class="breadcrumb mb-3">
+        <span class="breadcrumb-item text-muted">Visitas</span>
+        <i class="fa-solid fa-chevron-right breadcrumb-separator"></i>
+        <span class="breadcrumb-item breadcrumb-active">Detalles de la Visita</span>
+    </div>
+
+    <div class="page-header d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="page-title">Detalles de la Visita</h1>
+            <p class="page-description">Revisa la información completa y planifica los apiarios y herramientas.</p>
+        </div>
+        <div class="d-flex gap-3">
+            <a asp-action="Index" class="btn-outline">
+                <i class="fa-solid fa-arrow-left me-2"></i> Volver a la Lista
+            </a>
+            <a asp-action="Edit" asp-route-id="@Model?.ID_Visita" class="btn-primary">
+                <i class="fa-solid fa-pen me-2"></i> Editar Visita
+            </a>
+        </div>
+    </div>
+
+    <!-- MAIN INFO CARD -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fa-solid fa-route"></i> Visita del @Model.Fecha.ToString("dd/MM/yyyy")
+        </div>
+        <div class="card-body">
+            <div class="cards-layout" style="grid-template-columns: 1fr 1fr 1fr; gap: 2rem;">
+                <div>
+                    <p class="form-label">APIARIO</p>
+                    <p style="font-size: 1.1rem; font-weight: 600; color: #3e200c;">
+                        <i class="fa-solid fa-map-location-dot" style="color: #d4a373;"></i> 
+                        @(Model.ApiariosRevisados.FirstOrDefault()?.Apiario?.Nombre ?? "Sin asignar")
+                    </p>
+                </div>
+                <div>
+                    <p class="form-label">TEMPORADA</p>
+                    <p style="font-size: 1.1rem; font-weight: 600; color: #3e200c;">
+                        <i class="fa-solid fa-leaf" style="color: #618264;"></i> @Model.Temporada
+                    </p>
+                </div>
+                <div>
+                    <p class="form-label">APICULTOR RESPONSABLE</p>
+                    <p style="font-size: 1.1rem; font-weight: 600; color: #3e200c;">
+                        <i class="fa-solid fa-user-tie" style="color: #a35a16;"></i> @Model.Apicultor?.Nombre
+                    </p>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <p class="form-label">OBSERVACIONES</p>
+                <div class="info-alert" style="margin-top: 0.5rem;">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span>@(string.IsNullOrEmpty(Model.Observaciones) ? "Sin observaciones registradas." : Model.Observaciones)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="cards-layout">
+        
+        <!-- HERRAMIENTAS PLANIFICADAS -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fa-solid fa-toolbox"></i> Herramientas</span>
+            </div>
+
+            <div class="card-body p-0">
+                @if (Model.HerramientasPlanificadas.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table mb-0" style="width: 100%; text-align: left; border-collapse: collapse;">
+                            <thead style="background-color: #faf8f2; font-size: 0.85rem; color: #999;">
+                                <tr>
+                                    <th style="padding: 1rem 1.5rem;">HERRAMIENTA</th>
+                                    <th style="padding: 1rem 1.5rem;">CANTIDAD</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var planifica in Model.HerramientasPlanificadas)
+                                {
+                                    <tr style="border-bottom: 1px solid #f0ebe1;">
+                                        <td style="padding: 1rem 1.5rem; font-weight: 600; color: #3e200c;">
+                                            @planifica.Herramienta?.Nombre
+                                        </td>
+                                        <td style="padding: 1rem 1.5rem;">
+                                            <span class="status-badge" style="background: #e2d7be; color: #3e200c;">@planifica.Cantidad</span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center p-4">
+                        <p class="text-muted mb-0">No se han asignado herramientas para esta visita.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+        
+    <!-- TAREAS POR COLMENA -->
+    <div class="card mt-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fa-solid fa-list-check"></i> Tareas por Colmena</span>
+            </div>
+            
+            <div class="card-body p-0">
+                @if (Model.Tareas != null && Model.Tareas.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table mb-0" style="width: 100%; text-align: left; border-collapse: collapse;">
+                            <thead style="background-color: #faf8f2; font-size: 0.85rem; color: #999;">
+                                <tr>
+                                    <th style="padding: 1rem 1.5rem;">COLMENA</th>
+                                    <th style="padding: 1rem 1.5rem;">TAREA A REALIZAR</th>
+                                    <th style="padding: 1rem 1.5rem;">ESTADO</th>
+                                    <th style="padding: 1rem 1.5rem; text-align: right;">ACCIONES</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var tarea in Model.Tareas)
+                                {
+                                    <tr style="border-bottom: 1px solid #f0ebe1;">
+                                        <td style="padding: 1rem 1.5rem; font-weight: 600; color: #3e200c;">
+                                            @tarea.Colmena?.Identificador
+                                        </td>
+                                        <td style="padding: 1rem 1.5rem;">
+                                            @tarea.Descripcion
+                                        </td>
+                                        <td style="padding: 1rem 1.5rem;">
+                                            <span class="status-badge" id="badge-tarea-@tarea.ID_Tarea" style="background: @(tarea.Estado == "Pendiente" ? "#f8d7da" : "#d4edda"); color: @(tarea.Estado == "Pendiente" ? "#721c24" : "#155724");">@tarea.Estado</span>
+                                        </td>
+                                        <td style="padding: 1rem 1.5rem; text-align: right;">
+                                            <button type="button" class="btn-outline" style="padding: 6px 12px; font-size: 0.85rem;" onclick="toggleTareaStatus(@tarea.ID_Tarea)">
+                                                <i class="fa-solid fa-check-double"></i> Alternar Estado
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center p-4">
+                        <p class="text-muted mb-0">No hay tareas específicas asignadas a colmenas en esta visita.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        async function toggleTareaStatus(id) {
+            try {
+                const response = await fetch(`/Visitas/ToggleTareaStatus/${id}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        const badge = document.getElementById(`badge-tarea-${id}`);
+                        badge.innerText = result.newState;
+                        if (result.newState === "Pendiente") {
+                            badge.style.background = "#f8d7da";
+                            badge.style.color = "#721c24";
+                        } else {
+                            badge.style.background = "#d4edda";
+                            badge.style.color = "#155724";
+                        }
+                    }
+                } else {
+                    alert("No se pudo actualizar el estado.");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Error de conexión al actualizar el estado.");
+            }
+        }
+    </script>
+}

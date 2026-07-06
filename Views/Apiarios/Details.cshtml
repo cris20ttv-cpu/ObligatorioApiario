@@ -1,0 +1,165 @@
+@model ObligatorioApiario.Models.Apiario
+
+@{
+    ViewData["Title"] = "Detalle de Apiario";
+}
+
+<div class="details-page-container">
+    <div class="breadcrumb mb-3">
+        <span class="breadcrumb-item text-muted">Apiarios</span>
+        <i class="fa-solid fa-chevron-right breadcrumb-separator"></i>
+        <span class="breadcrumb-item breadcrumb-active">@Model.Nombre</span>
+    </div>
+
+    <div class="page-header d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="page-title">@Model.Nombre</h1>
+            <p class="page-description" style="margin-bottom: 0;">ID: API-@Model.ID_Apiario.ToString("D5")</p>
+        </div>
+        <div class="header-actions d-flex gap-2">
+            <a asp-controller="Cosechas" asp-action="Create" asp-route-apiarioId="@Model.ID_Apiario" class="btn-primary" style="background-color: #8c4b14;">
+                <i class="fa-solid fa-jar me-2"></i> Registrar Cosecha
+            </a>
+            <a asp-action="Edit" asp-route-id="@Model.ID_Apiario" class="btn-outline">
+                <i class="fa-solid fa-pen"></i> Editar
+            </a>
+        </div>
+    </div>
+
+    <!-- MAIN INFO CARDS -->
+    <div class="cards-layout mb-5">
+        <div class="card">
+            <div class="card-header">
+                <i class="fa-solid fa-circle-info"></i> Información General
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <p class="form-label">UBICACIÓN / DIRECCIÓN</p>
+                        <p style="font-size: 1.05rem; font-weight: 500; color: #3e200c;">
+                            <i class="fa-solid fa-map-pin text-muted me-2"></i> @(string.IsNullOrEmpty(Model.Ubicacion) ? "Sin dirección" : Model.Ubicacion)
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="form-label">ZONA</p>
+                        <p style="font-size: 1.05rem; font-weight: 500; color: #3e200c;">
+                            <span class="status-badge" style="background: #e2d7be; color: #3e200c;">@(string.IsNullOrEmpty(Model.Zona) ? "S/D" : Model.Zona)</span>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="form-label">LATITUD / LONGITUD</p>
+                        <p style="font-size: 1.05rem; font-weight: 500; color: #3e200c; font-family: monospace;">
+                            @Model.Latitud, @Model.Longitud
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="form-label">CANT. COLMENAS REGISTRADAS</p>
+                        <p style="font-size: 1.05rem; font-weight: 500; color: #3e200c;">
+                            <i class="fa-solid fa-layer-group text-muted me-2"></i> @(Model.ColmenasInstaladas?.Count ?? 0) colmenas
+                        </p>
+                    </div>
+                    <div class="col-12 mt-2">
+                        <p class="form-label">NOTAS Y DESCRIPCIÓN</p>
+                        <div class="info-alert" style="margin-top: 0.5rem;">
+                            <i class="fa-solid fa-note-sticky"></i>
+                            <span>@(string.IsNullOrEmpty(Model.Notas) ? "No hay notas adicionales para este apiario." : Model.Notas)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <i class="fa-solid fa-map"></i> Vista de Mapa
+            </div>
+            <div class="card-body p-0">
+                <div id="interactive-map" style="width: 100%; height: 100%; min-height: 300px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- COLMENAS SECTION -->
+    <div class="colmenas-section mt-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="apiario-title" style="margin: 0;">Colmenas Instaladas</h2>
+            <a asp-controller="Colmenas" asp-action="Create" asp-route-apiarioId="@Model.ID_Apiario" class="btn-primary">
+                <i class="fa-solid fa-plus me-2"></i> Nueva Colmena
+            </a>
+        </div>
+
+        @if (Model.ColmenasInstaladas != null && Model.ColmenasInstaladas.Any())
+        {
+            <div class="apiarios-grid">
+                @foreach (var inst in Model.ColmenasInstaladas)
+                {
+                    <div class="apiario-card" style="min-height: 150px;">
+                        <div class="apiario-card-body">
+                            <div class="apiario-card-header mb-3">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h3 class="apiario-title" style="font-size: 1.3rem;">@inst.Colmena.Identificador</h3>
+                                    </div>
+                                    <span class="status-badge" style="background-color: #e6f6eb; color: #2e8b57;">
+                                        @inst.Colmena.Estado
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="apiario-card-footer mt-auto" style="border-top: none;">
+                                <a asp-controller="Colmenas" asp-action="Details" asp-route-id="@inst.Colmena.ID_Colmena" class="detail-link">
+                                    Ver Detalle <i class="fa-solid fa-arrow-right"></i>
+                                </a>
+                                <div class="card-actions">
+                                    <a asp-controller="Colmenas" asp-action="Edit" asp-route-id="@inst.Colmena.ID_Colmena" style="color: #6c757d; font-size: 1.1rem; transition: color 0.2s;" onmouseover="this.style.color='#a35a16'" onmouseout="this.style.color='#6c757d'">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="empty-state-container" style="min-height: 200px;">
+                <div class="empty-state" style="padding: 2rem;">
+                    <i class="fa-solid fa-layer-group empty-state-icon" style="font-size: 3rem; color: #e2d7be; margin-bottom: 1rem;"></i>
+                    <h3 style="font-family: 'Lora', serif; color: #3e200c;">Sin colmenas</h3>
+                    <p style="color: #757575;">No hay colmenas registradas en este apiario aún.</p>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Incluir CSS de Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+@section Scripts {
+    <!-- Incluir JS de Leaflet -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var lat = parseFloat('@Model.Latitud'.replace(',', '.'));
+            var lng = parseFloat('@Model.Longitud'.replace(',', '.'));
+            
+            if(!isNaN(lat) && !isNaN(lng)) {
+                var map = L.map('interactive-map').setView([lat, lng], 14);
+
+                L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '&copy; OpenStreetMap'
+                }).addTo(map);
+
+                L.marker([lat, lng]).addTo(map)
+                    .bindPopup('<b>@Model.Nombre</b><br>@Model.Zona')
+                    .openPopup();
+            } else {
+                document.getElementById('interactive-map').innerHTML = '<div style="display:flex; height:100%; align-items:center; justify-content:center; background:#f0ebe1; color:#999;">Coordenadas inválidas</div>';
+            }
+        });
+    </script>
+}

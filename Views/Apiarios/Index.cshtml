@@ -1,0 +1,92 @@
+@model IEnumerable<ObligatorioApiario.Models.Apiario>
+
+@{
+    ViewData["Title"] = "Mis Apiarios";
+}
+
+<div class="apiarios-page-container">
+    <div class="page-header d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="page-title">Mis Apiarios</h1>
+            <p class="page-description">Gestiona y supervisa todos tus apiarios desde un solo lugar.</p>
+        </div>
+        <a asp-action="Create" class="btn-primary">
+            <i class="fa-solid fa-plus me-2"></i> Nuevo Apiario
+        </a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="empty-state-container">
+            <div class="empty-state">
+                <div class="empty-state-icon-wrapper">
+                    <i class="fa-solid fa-map-location-dot empty-state-icon"></i>
+                </div>
+                <h1>Aún no tienes apiarios</h1>
+                <p>Comienza creando tu primer apiario para registrar colmenas y cosechas.</p>
+                <a asp-action="Create" class="btn-primary">Crear el primer Apiario</a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="apiarios-grid">
+            @foreach (var item in Model)
+            {
+                <div class="apiario-card">
+                    <div class="card-img-container">
+                        <!-- Placeholder for nature image -->
+                        <img class="card-img" src="https://images.unsplash.com/photo-1587595431973-160d0d94add1?q=80&w=800&auto=format&fit=crop" alt="Apiario" />
+                        <span class="zona-badge">
+                            <i class="fa-solid fa-location-dot"></i> @(string.IsNullOrEmpty(item.Zona) ? "S/D" : item.Zona)
+                        </span>
+                    </div>
+                    
+                    <div class="apiario-card-body">
+                        <div class="apiario-card-header">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h2 class="apiario-title">@item.Nombre</h2>
+                                    <div class="apiario-id">ID: API-@item.ID_Apiario.ToString("D5")</div>
+                                </div>
+                                <span class="status-badge status-healthy">SALUDABLE</span>
+                            </div>
+                        </div>
+                        
+                        <div class="apiario-stats">
+                            <div class="stat-item">
+                                <span class="stat-value">@(item.ColmenasInstaladas?.Count ?? 0)</span>
+                                <span class="stat-label">Colmenas</span>
+                            </div>
+                            <div class="stat-divider"></div>
+                            <div class="stat-item">
+                                <span class="stat-value">
+                                    @{
+                                        var dict = ViewBag.ProduccionPorApiario as Dictionary<int, decimal>;
+                                        var produccionKg = dict != null && dict.ContainsKey(item.ID_Apiario) ? dict[item.ID_Apiario] : 0;
+                                    }
+                                    @produccionKg.ToString("0.##") kg
+                                </span>
+                                <span class="stat-label">Última Cosecha</span>
+                            </div>
+                        </div>
+
+                        <div class="apiario-card-footer">
+                            <a asp-action="Details" asp-route-id="@item.ID_Apiario" class="detail-link">
+                                Ver Detalle <i class="fa-solid fa-arrow-right"></i>
+                            </a>
+                            <div class="card-actions d-flex gap-3">
+                                <a asp-action="Edit" asp-route-id="@item.ID_Apiario" style="color: #6c757d; font-size: 1.1rem; transition: color 0.2s;" onmouseover="this.style.color='#a35a16'" onmouseout="this.style.color='#6c757d'">
+                                    <i class="fa-solid fa-pen"></i>
+                                </a>
+                                <a asp-action="Delete" asp-route-id="@item.ID_Apiario" style="color: #dc3545; font-size: 1.1rem; transition: color 0.2s;" onmouseover="this.style.color='#a71d2a'" onmouseout="this.style.color='#dc3545'">
+                                    <i class="fa-solid fa-trash"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

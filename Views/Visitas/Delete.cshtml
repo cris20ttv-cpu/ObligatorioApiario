@@ -1,0 +1,28 @@
+@model ObligatorioApiario.Models.Visita
+
+@{
+    ViewData["Title"] = "Eliminar Visita";
+}
+
+<div class="details-page-container" style="max-width: 800px; margin: 0 auto; padding-bottom: 2rem; text-align: center;">
+    <h1 style="color: #d9534f; font-weight: 700; margin-bottom: 1rem; font-size: 2.5rem;">
+        <i class="fa-solid fa-triangle-exclamation"></i> Eliminar Visita
+    </h1>
+    <h4 style="color: #2c3e50; font-weight: 600; margin-bottom: 2rem;">¿Estás seguro de que deseas eliminar esta visita del @Model.Fecha.ToString("dd/MM/yyyy")?</h4>
+    
+    <p style="color: #6c757d; font-size: 1.1rem; margin-bottom: 2rem;">
+        Esta acción es irreversible y eliminará también toda la planificación de apiarios y herramientas asociadas a esta visita.
+    </p>
+    
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="ID_Visita" />
+        <div class="d-flex justify-content-center gap-3 mt-4">
+            <a asp-action="Index" class="btn btn-outline-secondary" style="font-weight: 600; border-radius: 8px; padding: 0.6rem 2rem;">
+                Cancelar
+            </a>
+            <button type="submit" class="btn btn-danger" style="font-weight: 600; border-radius: 8px; padding: 0.6rem 2rem; box-shadow: 0 4px 6px rgba(220,53,69,0.3);">
+                <i class="fa-solid fa-trash me-2"></i> Sí, Eliminar Permanentemente
+            </button>
+        </div>
+    </form>
+</div>

@@ -1,0 +1,46 @@
+@model ObligatorioApiario.Models.LoginViewModel
+@{
+    Layout = "_LoginLayout";
+    ViewData["Title"] = "Login";
+}
+
+<div class="login-page">
+    <div class="login-background"></div>
+    
+    <div class="login-card-container">
+        <div class="login-card">
+            <div class="login-header">
+                <h1>Bienvenido de nuevo</h1>
+                <p> Inicia sesión para continuar</p>
+            </div>
+
+            <form asp-action="Login" method="post" class="login-form">
+                <div asp-validation-summary="ModelOnly" class="text-danger" style="margin-bottom: 15px; text-align: center; color: #BA1A1A;"></div>
+
+                <div class="form-group">
+                    <label class="form-label" asp-for="Email">Correo electrónico</label>
+                    <input type="email" asp-for="Email" class="form-input login-input" placeholder="tucorreo@ejemplo.com" required />
+                    <span asp-validation-for="Email" class="text-danger" style="color: #BA1A1A; font-size: 0.8rem; display: block; margin-top: 5px;"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" asp-for="Password">Contraseña</label>
+                    <div class="password-input-wrapper">
+                        <input type="password" asp-for="Password" class="form-input login-input password-field" placeholder="Contraseña" required />
+                        <i class="fa-regular fa-eye-slash password-toggle-icon"></i>
+                    </div>
+                    <span asp-validation-for="Password" class="text-danger" style="color: #BA1A1A; font-size: 0.8rem; display: block; margin-top: 5px;"></span>
+                </div>
+
+                <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" asp-for="RememberMe" id="RememberMe" />
+                    <label for="RememberMe" style="font-size: 0.9rem; color: #5c4e40; cursor: pointer;">Recordarme en este equipo</label>
+                </div>
+
+                <div class="login-actions mt-4">
+                    <button type="submit" class="btn-primary btn-login-submit">Iniciar sesión</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
